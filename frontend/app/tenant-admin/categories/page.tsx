@@ -1,6 +1,8 @@
 'use client';
 
-import { useTenant } from '@/hooks/useTenant';
+import useTenant from '@/hooks/useTenant';
+import useFetch from '@/hooks/useFetch';
+import { categoryService, productService } from '@/services';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,8 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useFetch } from '@/hooks/useFetch';
-import { productService } from '@/services/products';
 import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';

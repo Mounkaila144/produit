@@ -1,10 +1,9 @@
 'use client';
 
-import { useTenant } from '@/hooks/useTenant';
+import useTenant from '@/hooks/useTenant';
+import useFetch from '@/hooks/useFetch';
+import { productService, tenantService } from '@/services';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFetch } from '@/hooks/useFetch';
-import { productService } from '@/services/products';
-import { tenantService } from '@/services/tenants';
 import { Package, Users, ShoppingCart, CreditCard, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';

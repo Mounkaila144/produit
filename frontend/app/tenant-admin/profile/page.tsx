@@ -1,6 +1,6 @@
 'use client';
 
-import { useTenant } from '@/hooks/useTenant';
+import useTenant from '@/hooks/useTenant';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useFetch } from '@/hooks/useFetch';
-import { tenantService } from '@/services/tenants';
+import useFetch from '@/hooks/useFetch';
+import { tenantService } from '@/services';
 import { useState } from 'react';
 import { ImageUpload } from '@/components/image-upload';
 

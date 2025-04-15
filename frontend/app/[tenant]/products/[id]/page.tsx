@@ -14,6 +14,26 @@ interface ProductPageProps {
   };
 }
 
+interface ProductsResponse {
+  products: Array<{
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    category?: string;
+    image?: string;
+    inStock?: boolean;
+    freeShipping?: boolean;
+  }>;
+  pagination: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
+  totalCount: number;
+}
+
 export default function ProductPage({ params }: ProductPageProps) {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [product, setProduct] = useState<any | null>(null);
@@ -32,10 +52,10 @@ export default function ProductPage({ params }: ProductPageProps) {
         
         if (tenantData) {
           // Charger les produits du tenant
-          const products = await TenantService.getTenantProducts(tenantData.id);
+          const productsData = await TenantService.getTenantProducts(tenantData.id) as ProductsResponse;
           
           // Trouver le produit spécifique par ID
-          const foundProduct = products.find(p => p.id === params.id);
+          const foundProduct = productsData.products.find(p => p.id === params.id);
           setProduct(foundProduct || null);
         }
       } catch (error) {
