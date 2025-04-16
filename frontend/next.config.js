@@ -76,7 +76,7 @@ const nextConfig = {
         source: '/api/tenant-admin/:path*',
         destination: 'http://localhost:8001/api/tenant/:path*',
       },
-      // Redirection des images uploadées
+      // Redirection des images uploadées - Mise à jour pour accès public direct
       {
         source: '/uploads/:path*',
         destination: 'http://localhost:8001/uploads/:path*',

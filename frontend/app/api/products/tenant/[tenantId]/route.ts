@@ -144,43 +144,50 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { tenantId: string } }
 ) {
-  const { tenantId } = params;
-  
-  // Simuler un délai réseau pour montrer le chargement
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
   try {
-    // Récupérer les produits pour le tenant
-    let products;
+    const { tenantId } = params;
+    const { searchParams } = request.nextUrl;
     
-    // Si c'est un ID de tenant de développement
-    if (tenantId.startsWith('dev-')) {
-      products = productsDB[tenantId] || [];
-    } else {
-      // Pour les vrais tenants, vous feriez une requête à votre API/DB réelle
-      // Simulons des produits pour l'instant
-      products = realTenantProducts;
+    // Récupérer l'URL de l'API backend
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+    
+    // Construire l'URL avec les paramètres de requête originaux pour l'endpoint direct
+    let url = `${apiUrl}/api/direct/products/tenant/${tenantId}`;
+    
+    // Ajouter tous les paramètres de recherche originaux
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of searchParams.entries()) {
+      queryParams.append(key, value);
     }
     
-    if (!products || products.length === 0) {
+    // Ajouter les paramètres à l'URL s'il y en a
+    const queryString = queryParams.toString();
+    if (queryString) {
+      url = `${url}?${queryString}`;
+    }
+    
+    // Appel à l'API backend sans header tenant
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json'
+      },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
       return NextResponse.json(
-        { 
-          success: true, 
-          message: "Aucun produit trouvé pour ce tenant",
-          data: [] 
-        },
-        { status: 200 }
+        { success: false, message: "Erreur lors de la récupération des produits" },
+        { status: response.status }
       );
     }
     
-    return NextResponse.json({ 
-      success: true, 
-      data: products 
-    });
+    // Récupérer le résultat et le transmettre
+    const data = await response.json();
+    
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Erreur lors de la récupération des produits:', error);
     return NextResponse.json(
-      { success: false, message: "Erreur lors de la récupération des produits" },
+      { success: false, message: "Erreur serveur" },
       { status: 500 }
     );
   }

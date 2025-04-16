@@ -13,7 +13,9 @@ exports.extractTenant = async (req, res, next) => {
     '/api/auth/super-admin/login',
     '/api/auth/login',
     '/api/auth/profile',
-    '/api/superadmin'
+    '/api/superadmin',
+    '/api/public',
+    '/uploads'
   ];
 
   // Vérifier si la route doit bypasser la vérification du tenant

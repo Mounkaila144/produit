@@ -9,7 +9,8 @@ const nonTenantPaths = [
   '/admin',
   '/super-admin',
   '/tenant-admin',
-  '/api'
+  '/api',
+  '/uploads'
 ]
 
 export function middleware(request: NextRequest) {
@@ -40,6 +41,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Exclure les fichiers statiques
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 } 

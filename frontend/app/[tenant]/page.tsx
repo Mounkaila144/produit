@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { notFound } from 'next/navigation';
 
 export default function TenantPage({
   params
@@ -149,6 +150,11 @@ export default function TenantPage({
         </div>
       </div>
     );
+  }
+
+  // Afficher une page 404 si le tenant n'existe pas
+  if (!loading && !tenant) {
+    return notFound();
   }
 
   // Liste de catégories pour le sélecteur

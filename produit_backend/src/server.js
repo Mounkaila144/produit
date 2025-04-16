@@ -11,6 +11,11 @@ const productRoutes = require('./routes/product.routes');
 const superadminRoutes = require('./routes/superadmin.routes');
 const tenantRoutes = require('./routes/tenant.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const publicRoutes = require('./routes/public.routes');
+
+// Import des modèles
+const { Tenant, User, Product, Category } = require('./models');
+const { Op } = require('sequelize');
 
 // Import des services
 const scheduler = require('./services/scheduler.service');
@@ -31,8 +36,195 @@ const fs = require('fs');
 const uploadDir = path.join(__dirname, '../public/uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
-// Servir les fichiers statiques
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// S'assurer que le dossier products existe
+const productsDir = path.join(uploadDir, 'products');
+fs.mkdirSync(productsDir, { recursive: true });
+
+// Serve uploads statically - avant toute autre route
+const uploadsPath = path.join(__dirname, '../public/uploads');
+console.log('Chemin des uploads:', uploadsPath);
+app.use('/uploads', express.static(uploadsPath));
+
+// Route de debug pour vérifier l'existence des fichiers
+app.get('/check-file', (req, res) => {
+  const { filename } = req.query;
+  if (!filename) {
+    return res.status(400).json({ error: 'Le paramètre filename est requis' });
+  }
+  
+  const filePath = path.join(uploadsPath, filename);
+  const exists = fs.existsSync(filePath);
+  
+  return res.json({
+    filename,
+    path: filePath,
+    exists,
+    uploadsPath
+  });
+});
+
+// Public routes (no tenant header required)
+app.use('/api/public', publicRoutes);
+
+// Routes directes (bypass tenant middleware)
+app.get('/api/direct/tenants/by-domain/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    
+    // Récupérer le tenant par son domaine
+    const tenant = await Tenant.findOne({
+      where: { 
+        domain,
+        active: true, // Seulement les tenants actifs
+      },
+      include: [
+        {
+          model: User,
+          as: 'owner',
+          attributes: ['id', 'username', 'email']
+        }
+      ]
+    });
+
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        message: `Tenant avec le domaine ${domain} non trouvé ou inactif`
+      });
+    }
+
+    // Vérifier si le tenant n'a pas expiré
+    if (tenant.expiresAt && new Date(tenant.expiresAt) < new Date()) {
+      return res.status(403).json({
+        success: false,
+        message: `L'abonnement du tenant ${tenant.name} a expiré`
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: tenant
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Erreur lors de la récupération du tenant`
+    });
+  }
+});
+
+// Route directe pour récupérer les produits d'un tenant
+app.get('/api/direct/products/tenant/:tenantId', async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { 
+      search, 
+      category, 
+      minPrice, 
+      maxPrice,
+      page = 1,
+      limit = 10,
+      sort = 'name'
+    } = req.query;
+    
+    // Vérifier que le tenant existe et est actif
+    const tenant = await Tenant.findOne({
+      where: { 
+        id: tenantId,
+        active: true
+      }
+    });
+    
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        message: `Tenant avec l'ID ${tenantId} non trouvé ou inactif`
+      });
+    }
+    
+    // Vérifier si le tenant n'a pas expiré
+    if (tenant.expiresAt && new Date(tenant.expiresAt) < new Date()) {
+      return res.status(403).json({
+        success: false,
+        message: `L'abonnement du tenant ${tenant.name} a expiré`
+      });
+    }
+    
+    // Construire le filtre de recherche
+    const where = { 
+      tenantId 
+    };
+    
+    // Ajouter le filtre de recherche par nom ou description
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    // Filtres de prix
+    if (minPrice !== undefined) {
+      where.price = { ...(where.price || {}), [Op.gte]: minPrice };
+    }
+    
+    if (maxPrice !== undefined) {
+      where.price = { ...(where.price || {}), [Op.lte]: maxPrice };
+    }
+    
+    // Pagination
+    const offset = (page - 1) * limit;
+    
+    // Construire l'ordre de tri
+    const order = [];
+    if (sort) {
+      const [field, direction] = sort.split(':');
+      order.push([field, direction?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC']);
+    }
+    
+    // Filtrer par catégorie
+    const include = [
+      {
+        model: Category,
+        as: 'Category',
+        attributes: ['id', 'name']
+      }
+    ];
+    
+    if (category) {
+      include[0].where = { name: category };
+    }
+    
+    // Récupérer les produits avec pagination
+    const { count, rows: products } = await Product.findAndCountAll({
+      where,
+      include,
+      limit: parseInt(limit),
+      offset,
+      order
+    });
+    
+    // Calculer les informations de pagination
+    const totalPages = Math.ceil(count / limit);
+    
+    res.status(200).json({
+      success: true,
+      count,
+      data: products,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Erreur lors de la récupération des produits: ${error.message}`
+    });
+  }
+});
 
 // Middleware pour extraire le tenant des requêtes
 app.use(extractTenant);

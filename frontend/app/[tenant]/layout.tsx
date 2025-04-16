@@ -33,11 +33,6 @@ export default function TenantLayout({
     loadTenant();
   }, [params.tenant]);
 
-  // Afficher une page non trouvée si le tenant n'existe pas
-  if (!loading && !tenant) {
-    return notFound();
-  }
-
   // Log pour débug
   useEffect(() => {
     console.log('TenantLayout: Tenant Path actuel:', params.tenant);
