@@ -47,6 +47,24 @@ import categoryService, { Category } from '@/services/categories';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
+// Interface pour les données de pagination
+interface PaginationData {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  itemsPerPage: number;
+}
+
+// Interface pour la réponse de l'API des produits
+interface ExtendedProductsResponse {
+  data: Product[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  pagination?: PaginationData;
+}
+
 export default function ProductsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -99,7 +117,8 @@ export default function ProductsPage() {
       const debugResponse = await fetch(`/api/products?${paramsString.toString()}`, {
         headers: {
           'Content-Type': 'application/json',
-          'X-Debug': 'true'
+          'X-Debug': 'true',
+          'x-tenant-id': user?.tenantId || localStorage.getItem('tenantId') || ''
         }
       });
       
@@ -108,7 +127,7 @@ export default function ProductsPage() {
 
       // Charger les produits et les catégories en parallèle
       const [productsResponse, categoriesResponse] = await Promise.all([
-        productService.getProducts(params),
+        productService.getProducts(params) as unknown as ExtendedProductsResponse,
         categoryService.getCategories()
       ]);
 
@@ -322,7 +341,7 @@ export default function ProductsPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="min-price">Prix min (€)</Label>
+                <Label htmlFor="min-price">Prix min (CFA)</Label>
                 <Input
                   id="min-price"
                   type="number"
@@ -333,7 +352,7 @@ export default function ProductsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="max-price">Prix max (€)</Label>
+                <Label htmlFor="max-price">Prix max (CFA)</Label>
                 <Input
                   id="max-price"
                   type="number"
@@ -433,7 +452,7 @@ export default function ProductsPage() {
                     <TableCell>{getCategoryName(product.categoryId)}</TableCell>
                     <TableCell>{product.stock}</TableCell>
                     <TableCell>
-                      <Badge variant={product.isActive ? "success" : "secondary"}>
+                      <Badge variant={product.isActive ? "default" : "secondary"}>
                         {product.isActive ? "Actif" : "Inactif"}
                       </Badge>
                     </TableCell>

@@ -44,7 +44,6 @@ import * as z from 'zod';
 import productService from '@/services/products';
 import categoryService, { Category } from '@/services/categories';
 import { useSession } from 'next-auth/react';
-import useEffectiveTenantId from '@/hooks/useEffectiveTenantId';
 import uploadService from '@/services/upload';
 
 // Définition du schéma de validation du formulaire
@@ -69,7 +68,6 @@ export default function CreateProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const { data: session } = useSession();
-  const effectiveTenantId = useEffectiveTenantId();
   const [tempImageFiles, setTempImageFiles] = useState<File[]>([]);
 
   // Initialisation du formulaire avec les valeurs par défaut
@@ -112,17 +110,17 @@ export default function CreateProductPage() {
       // S'assurer que les images sont un tableau
       data.images = data.images && Array.isArray(data.images) ? data.images : [];
       
+      // Récupérer le tenant ID effectif pour toutes les opérations
+      const tenantId = 
+        (typeof window !== 'undefined' ? localStorage.getItem('tenantId') || localStorage.getItem('adminTenantId') : null);
+      
+      if (!tenantId) {
+        throw new Error("Tenant ID non trouvé. Impossible de créer le produit.");
+      }
+      
       // Si nous avons des images temporaires à uploader
       if (tempImageFiles.length > 0) {
         console.log("Upload des images temporaires:", tempImageFiles.length);
-        
-        // Récupérer le tenant ID effectif
-        const effectiveTenantId = session?.user?.tenantId || 
-          (typeof window !== 'undefined' ? localStorage.getItem('tenantId') || localStorage.getItem('adminTenantId') : null);
-        
-        if (!effectiveTenantId) {
-          throw new Error("Tenant ID non trouvé pour l'upload des images.");
-        }
         
         try {
           // Filtrer les URLs temporaires (celles qui commencent par "blob:")
@@ -130,7 +128,7 @@ export default function CreateProductPage() {
           
           // Uploader toutes les images temporaires
           const uploadPromises = tempImageFiles.map(file => 
-            uploadService.uploadSingleFile(file, effectiveTenantId as string)
+            uploadService.uploadSingleFile(file, tenantId)
           );
           
           const uploadResults = await Promise.all(uploadPromises);
@@ -142,15 +140,21 @@ export default function CreateProductPage() {
           data.images = [...persistedImages, ...uploadedUrls];
           
           console.log("Images finales pour le produit:", data.images);
-        } catch (uploadError) {
+        } catch (uploadError: any) {
           console.error("Erreur lors de l'upload des images:", uploadError);
-          throw new Error(`Erreur lors de l'upload des images: ${uploadError.message}`);
+          throw new Error(`Erreur lors de l'upload des images: ${uploadError.message || 'Erreur inconnue'}`);
         }
       }
       
-      // Envoyer les données avec les images mises à jour
-      console.log("Données envoyées au backend:", JSON.stringify(data, null, 2));
-      const result = await productService.createProduct(data);
+      // Ajouter le tenantId aux données du produit avant de les envoyer
+      const productData = {
+        ...data,
+        tenantId: tenantId
+      };
+      
+      // Envoyer les données avec les images mises à jour et le tenantId
+      console.log("Données envoyées au backend:", JSON.stringify(productData, null, 2));
+      const result = await productService.createProduct(productData);
       console.log("Réponse du backend:", JSON.stringify(result, null, 2));
       toast({
         title: 'Succès',
@@ -273,7 +277,7 @@ export default function CreateProductPage() {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prix (€)</FormLabel>
+                        <FormLabel>Prix (CFA)</FormLabel>
                         <FormControl>
                           <Input type="number" min="0" step="0.01" {...field} />
                         </FormControl>
@@ -362,7 +366,7 @@ export default function CreateProductPage() {
                               if (files) setTempImageFiles(files);
                             }}
                             maxImages={5}
-                            tenantId={effectiveTenantId || undefined}
+                            tenantId={typeof window !== 'undefined' ? localStorage.getItem('tenantId') || localStorage.getItem('adminTenantId') || undefined : undefined}
                             instantUpload={false}
                             tempFiles={tempImageFiles}
                           />

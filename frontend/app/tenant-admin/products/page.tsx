@@ -352,7 +352,7 @@ export default function ProductsPage() {
                 <span className="font-medium">
                   {new Intl.NumberFormat('fr-FR', {
                     style: 'currency',
-                    currency: 'EUR',
+                    currency: 'CFA',
                   }).format(product.price)}
                 </span>
                 <Badge variant={product.stock > 0 ? 'default' : 'destructive'}>

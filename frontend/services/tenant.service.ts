@@ -166,6 +166,28 @@ export const TenantService = {
         totalCount: 0
       };
     }
+  },
+  
+  // Récupérer les statistiques du tenant (dashboard)
+  getTenantStats: async (): Promise<any> => {
+    try {
+      const response = await fetch('/api/tenant-admin/dashboard', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques:', error);
+      return null;
+    }
   }
 };
 

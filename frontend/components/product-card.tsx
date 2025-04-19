@@ -69,7 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardHeader>
       <CardContent className="pt-3 pb-2">
         <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-          {product.price.toFixed(2)} €
+          {product.price.toFixed(2)} CFA
         </p>
       </CardContent>
       <CardFooter className="pt-0 pb-5">

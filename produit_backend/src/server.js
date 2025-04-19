@@ -236,6 +236,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/tenant-admin', tenantRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Route de base pour tester l'API

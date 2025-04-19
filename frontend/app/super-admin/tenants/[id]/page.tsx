@@ -522,7 +522,7 @@ export default function TenantDetailsPage({ params }: { params: { id: string } }
                       <TableRow key={payment.id}>
                         <TableCell>{formatDate(payment.date)}</TableCell>
                         <TableCell className="capitalize">{tenant.planType || tenant.plan}</TableCell>
-                        <TableCell>{payment.amount} €</TableCell>
+                        <TableCell>{payment.amount} CFA</TableCell>
                         <TableCell>
                           <Badge variant={payment.status === 'completed' ? 'success' : 'secondary'}>
                             {payment.status}

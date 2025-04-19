@@ -308,7 +308,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prix (€)</FormLabel>
+                        <FormLabel>Prix (CFA)</FormLabel>
                         <FormControl>
                           <Input type="number" min="0" step="0.01" {...field} />
                         </FormControl>

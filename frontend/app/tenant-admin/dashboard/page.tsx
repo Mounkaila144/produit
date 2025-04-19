@@ -110,7 +110,7 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold">
               {new Intl.NumberFormat('fr-FR', {
                 style: 'currency',
-                currency: 'EUR',
+                currency: 'CFA',
               }).format(stats?.monthlyRevenue || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-muted-foreground">
                       {new Intl.NumberFormat('fr-FR', {
                         style: 'currency',
-                        currency: 'EUR',
+                        currency: 'CFA',
                       }).format(product.price)}
                     </p>
                   </div>

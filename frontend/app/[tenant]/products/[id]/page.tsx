@@ -118,10 +118,10 @@ export default function ProductPage({ params }: ProductPageProps) {
           </p>
           
           <div className="flex items-center mb-4">
-            <span className="text-2xl font-bold">{product.price.toFixed(2)} €</span>
+            <span className="text-2xl font-bold">{product.price.toFixed(2)} CFA</span>
             {product.oldPrice && (
               <span className="ml-2 text-lg text-gray-500 line-through">
-                {product.oldPrice.toFixed(2)} €
+                {product.oldPrice.toFixed(2)} CFA
               </span>
             )}
           </div>

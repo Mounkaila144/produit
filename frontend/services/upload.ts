@@ -1,4 +1,4 @@
-import { apiInstance } from "@/lib/axios-instance";
+import { apiService } from "@/services/api";
 
 const uploadService = {
   /**
@@ -27,7 +27,7 @@ const uploadService = {
       // Récupérer le token depuis localStorage
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-      const response = await apiInstance.post('/api/upload/single', formData, {
+      const response = await apiService.post('/upload/single', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-Tenant-ID': tenantId,
@@ -35,7 +35,7 @@ const uploadService = {
         },
       });
 
-      return response.data;
+      return response;
     } catch (error: any) {
       console.error('Erreur backend:', error.response?.data || error.message);
       throw error.response?.data || { message: 'Erreur lors de l\'upload du fichier' };
@@ -68,7 +68,7 @@ const uploadService = {
       // Récupérer le token depuis localStorage
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-      const response = await apiInstance.post('/api/upload/multiple', formData, {
+      const response = await apiService.post('/upload/multiple', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-Tenant-ID': tenantId,
@@ -76,7 +76,7 @@ const uploadService = {
         },
       });
 
-      return response.data;
+      return response;
     } catch (error: any) {
       console.error('Erreur backend:', error.response?.data || error.message);
       throw error.response?.data || { message: 'Erreur lors de l\'upload des fichiers' };

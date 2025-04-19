@@ -26,11 +26,15 @@ function useFetch<T>(
     isLoading: !skip,
     error: null,
   });
+  const [fetchAttempted, setFetchAttempted] = useState<boolean>(false);
 
   const execute = useCallback(async () => {
     if (skip) return;
+    // Si nous avons déjà fait une tentative et qu'il y a eu une erreur, ne pas réessayer
+    if (fetchAttempted && state.error) return;
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setFetchAttempted(true);
 
     try {
       const data = await fetchFn();
@@ -42,13 +46,14 @@ function useFetch<T>(
         error: error instanceof Error ? error : new Error(String(error)),
       }));
     }
-  }, [fetchFn, skip, ...dependencies]);
+  }, [fetchFn, skip, fetchAttempted, state.error, ...dependencies]);
 
   useEffect(() => {
     execute();
   }, [execute]);
 
   const refetch = useCallback(async () => {
+    setFetchAttempted(false); // Réinitialiser pour permettre une nouvelle tentative
     await execute();
   }, [execute]);
 
