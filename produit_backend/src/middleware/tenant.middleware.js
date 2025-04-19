@@ -19,7 +19,7 @@ exports.extractTenant = async (req, res, next) => {
   ];
 
   // Vérifier si la route doit bypasser la vérification du tenant
-  if (bypassRoutes.some(route => req.path.startsWith(route))) {
+  if (req.path.startsWith('/uploads/') || bypassRoutes.some(route => req.path.startsWith(route))) {
     return next();
   }
 

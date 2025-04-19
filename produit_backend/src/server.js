@@ -45,6 +45,21 @@ const uploadsPath = path.join(__dirname, '../public/uploads');
 console.log('Chemin des uploads:', uploadsPath);
 app.use('/uploads', express.static(uploadsPath));
 
+// Route spéciale pour accéder aux fichiers uploadés sans vérifier le tenant
+app.get('/uploads/:tenantId/*', (req, res, next) => {
+  // Reconstituer le chemin du fichier demandé
+  const tenantId = req.params.tenantId;
+  const remainingPath = req.params[0];
+  const filePath = path.join(uploadsPath, tenantId, remainingPath);
+  
+  // Vérifier si le fichier existe
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  
+  return next();
+});
+
 // Route de debug pour vérifier l'existence des fichiers
 app.get('/check-file', (req, res) => {
   const { filename } = req.query;
