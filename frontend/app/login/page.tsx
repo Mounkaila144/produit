@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Schéma de validation pour le formulaire de connexion
 const loginSchema = z.object({
@@ -22,18 +22,10 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-// Schéma de validation pour le formulaire de connexion super admin
-const superAdminLoginSchema = z.object({
-  email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
-});
-
-type SuperAdminLoginFormValues = z.infer<typeof superAdminLoginSchema>;
-
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { login, loginSuperAdmin } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Formulaire de connexion standard
@@ -43,19 +35,6 @@ export default function LoginPage() {
     formState: { errors: loginErrors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  // Formulaire de connexion super admin
-  const {
-    register: registerSuperAdmin,
-    handleSubmit: handleSubmitSuperAdmin,
-    formState: { errors: superAdminErrors },
-  } = useForm<SuperAdminLoginFormValues>({
-    resolver: zodResolver(superAdminLoginSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -94,136 +73,77 @@ export default function LoginPage() {
     }
   };
 
-  // Gestion de la soumission du formulaire de connexion super admin
-  const onSubmitSuperAdmin = async (data: SuperAdminLoginFormValues) => {
-    setIsLoading(true);
-    try {
-      const response = await loginSuperAdmin(data.email, data.password);
-      console.log('Réponse login superadmin:', response);
-      toast({
-        title: 'Connexion réussie',
-        description: 'Vous êtes maintenant connecté en tant que Super Admin.',
-      });
-      
-      // Attendre un instant pour que l'état utilisateur soit mis à jour
-      // avant de naviguer vers le tableau de bord
-      setTimeout(() => {
-        router.push('/super-admin/dashboard');
-      }, 1500);
-    } catch (error) {
-      console.error('Erreur détaillée:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de connexion',
-        description: error instanceof Error ? error.message : 'Email ou mot de passe incorrect pour le Super Admin.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="container flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <div className="w-full max-w-md">
-        <Tabs defaultValue="user">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="user">Utilisateur</TabsTrigger>
-            <TabsTrigger value="superadmin">Super Admin</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="user">
-            <Card>
-              <CardHeader>
-                <CardTitle>Connexion Utilisateur</CardTitle>
-                <CardDescription>
-                  Connectez-vous à votre compte pour accéder à la boutique.
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleSubmitLogin(onSubmitLogin)}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="exemple@email.com"
-                      {...registerLogin('email')}
-                    />
-                    {loginErrors.email && (
-                      <p className="text-sm text-red-500">{loginErrors.email.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      {...registerLogin('password')}
-                    />
-                    {loginErrors.password && (
-                      <p className="text-sm text-red-500">{loginErrors.password.message}</p>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading ? 'Connexion en cours...' : 'Se connecter'}
-                  </Button>
-                  <div className="text-sm text-center text-gray-500">
-                    Vous n'avez pas de compte?{' '}
-                    <Link href="/register" className="underline text-primary">
-                      S'inscrire
-                    </Link>
-                  </div>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="superadmin">
-            <Card>
-              <CardHeader>
-                <CardTitle>Connexion Super Admin</CardTitle>
-                <CardDescription>
-                  Connexion réservée aux administrateurs système.
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleSubmitSuperAdmin(onSubmitSuperAdmin)}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="superadmin-email">Email</Label>
-                    <Input
-                      id="superadmin-email"
-                      type="email"
-                      placeholder="admin@exemple.com"
-                      {...registerSuperAdmin('email')}
-                    />
-                    {superAdminErrors.email && (
-                      <p className="text-sm text-red-500">{superAdminErrors.email.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="superadmin-password">Mot de passe</Label>
-                    <Input
-                      id="superadmin-password"
-                      type="password"
-                      {...registerSuperAdmin('password')}
-                    />
-                    {superAdminErrors.password && (
-                      <p className="text-sm text-red-500">{superAdminErrors.password.message}</p>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading ? 'Connexion en cours...' : 'Se connecter'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
-        </Tabs>
+    <>
+      <div className="relative min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-red-600 to-white animate-gradient">
+        {/* Logo animé en arrière-plan */}
+        <div className="absolute top-12 left-12 opacity-10 animate-spin duration-[30000ms]">
+          <Image src="/images/logo.png" alt="Logo NigerDev" width={200} height={200} className="object-contain" />
+        </div>
+        <div className="absolute bottom-16 right-16 opacity-10 animate-pulse duration-[5000ms]">
+          <Image src="/images/logo.png" alt="Logo NigerDev" width={150} height={150} className="object-contain" />
+        </div>
+        <div className="w-full max-w-md">
+          <Card className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl transform transition-transform duration-500 hover:scale-105">
+            <CardHeader>
+              <CardTitle>Connexion Utilisateur</CardTitle>
+              <CardDescription>
+                Connectez-vous à votre compte pour accéder à la boutique.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmitLogin(onSubmitLogin)}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="exemple@email.com"
+                    {...registerLogin('email')}
+                    className="focus:ring-2 focus:ring-red-400 transition"
+                  />
+                  {loginErrors.email && (
+                    <p className="text-sm text-red-500">{loginErrors.email.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    {...registerLogin('password')}
+                    className="focus:ring-2 focus:ring-red-400 transition"
+                  />
+                  {loginErrors.password && (
+                    <p className="text-sm text-red-500">{loginErrors.password.message}</p>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <Button
+                  className="w-full transition-transform transform hover:scale-105 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white"
+                  type="submit" disabled={isLoading}
+                >
+                  {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+                </Button>
+                <div className="text-sm text-center text-gray-500">
+                </div>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
       </div>
-    </div>
+      <style jsx global>{`
+        @keyframes gradientAnimation {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradientAnimation 15s ease infinite;
+        }
+      `}</style>
+    </>
   );
 }

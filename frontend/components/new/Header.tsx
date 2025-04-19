@@ -78,6 +78,13 @@ export default function Header() {
                 pathname === '/contact' ? 'w-full' : ''
               }`}></span>
             </Link>
+            <Link 
+              href="/login" 
+              className={`relative text-sm font-medium transition-colors group ${pathname === '/login' ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-600'}`}
+            >
+              Se connecter
+              <span className={`absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-red-600 to-red-400 group-hover:w-full transition-all duration-300 ${pathname === '/login' ? 'w-full' : ''}`}></span>
+            </Link>
             <Button
               className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white rounded-full px-6 shadow-md shadow-red-900/20 border border-red-500/20"
               onClick={() => window.location.href = '/contact'}
@@ -118,7 +125,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <span className={`w-1.5 h-1.5 rounded-full mr-3 ${pathname === '/about' ? 'bg-red-500' : 'bg-transparent'}`}></span>
-                À Propos
+                À Propos test
               </Link>
               <Link 
                 href="/contact" 
@@ -129,6 +136,14 @@ export default function Header() {
               >
                 <span className={`w-1.5 h-1.5 rounded-full mr-3 ${pathname === '/contact' ? 'bg-red-500' : 'bg-transparent'}`}></span>
                 Contact
+              </Link>
+              <Link 
+                href="/login" 
+                className={`text-sm font-medium transition-colors ${pathname === '/login' ? 'text-red-600 font-semibold' : 'text-gray-700 hover:text-red-600'} flex items-center`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full mr-3 ${pathname === '/login' ? 'bg-red-500' : 'bg-transparent'}`}></span>
+                Se connecter
               </Link>
               <Button
                 className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white rounded-full px-6 shadow-md shadow-red-900/20 border border-red-500/20 py-2.5 mt-2 flex items-center justify-center"

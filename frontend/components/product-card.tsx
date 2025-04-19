@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantPath } from "@/hooks/useTenantPath";
+import { useState, useEffect } from 'react';
+import { TenantService, Tenant } from '@/services/tenant.service';
 
 interface ProductCardProps {
   product: Product;
@@ -22,12 +24,36 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const { tenant } = useTenantPath();
+  const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
+
+  useEffect(() => {
+    if (tenant) {
+      TenantService.getTenantByPath(tenant).then(data => setTenantInfo(data));
+    }
+  }, [tenant]);
 
   const handleAddToCart = () => {
     toast({
       title: "Ajouté au panier",
       description: `${product.name} a été ajouté à votre panier.`,
     });
+  };
+
+  const handleContactSeller = () => {
+    if (!tenantInfo) return;
+    let phoneNumber = '';
+    if (typeof tenantInfo.contactInfo === 'string') {
+      try {
+        const contact = JSON.parse(tenantInfo.contactInfo);
+        phoneNumber = contact.phone;
+      } catch {
+        phoneNumber = tenantInfo.contactInfo;
+      }
+    } else {
+      phoneNumber = tenantInfo.contactInfo.phone;
+    }
+    const sanitized = phoneNumber.replace(/\D/g, '');
+    window.open(`https://wa.me/${sanitized}`, '_blank');
   };
 
   // Construire l'URL du produit en fonction du contexte
@@ -37,9 +63,7 @@ export function ProductCard({ product }: ProductCardProps) {
     : `/products/${product.id}`;
 
   // Déterminer l'URL de l'image de façon sécurisée
-  const imageUrl = product.image || 
-    (product.images && product.images.length > 0 ? product.images[0] : null) || 
-    "https://placehold.co/600x600?text=Pas+d%27image";
+  const imageUrl = product.image || "https://placehold.co/600x600?text=Pas+d%27image";
 
   return (
     <Card className="overflow-hidden rounded-xl border-none shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300">
@@ -73,11 +97,11 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
       </CardContent>
       <CardFooter className="pt-0 pb-5">
-        <Button 
-          onClick={handleAddToCart} 
-          className="w-full rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 py-5 shadow-md hover:shadow-xl"
+        <Button
+          onClick={handleContactSeller}
+          className="w-full rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-300 py-5 shadow-md hover:shadow-xl text-white"
         >
-          Acheter
+          Contacter le vendeur
         </Button>
       </CardFooter>
     </Card>
