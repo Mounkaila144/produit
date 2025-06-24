@@ -45,7 +45,7 @@ async function createAdmin() {
       username: 'mounkaila144',
       email: 'mounkaila144@gmail.com',
       password: hashedPassword,
-      role: 'super-admin',
+      role: 'admin', // Utiliser 'admin' au lieu de 'super-admin'
       tenantId: tenant.id
     });
 
