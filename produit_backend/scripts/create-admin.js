@@ -29,22 +29,18 @@ async function createAdmin() {
     const existingUser = await User.findOne({
       where: { email: 'mounkaila144@gmail.com' }
     });
-
     if (existingUser) {
       console.log('⚠️  Un utilisateur avec cet email existe déjà');
       console.log('Voulez-vous le mettre à jour ? Supprimez-le d\'abord si nécessaire.');
       return;
     }
 
-    // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash('mounkaila144', 10);
-
-    // Créer l'utilisateur admin
+    // Créer l'utilisateur admin (le mot de passe sera hashé automatiquement par le hook beforeCreate)
     console.log('👤 Création de l\'utilisateur admin...');
     const adminUser = await User.create({
       username: 'mounkaila144',
       email: 'mounkaila144@gmail.com',
-      password: hashedPassword,
+      password: 'mounkaila144', // Le mot de passe sera hashé automatiquement
       role: 'admin', // Utiliser 'admin' au lieu de 'super-admin'
       tenantId: tenant.id
     });
