@@ -25,7 +25,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, loginSuperAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Formulaire de connexion standard
@@ -45,14 +45,36 @@ export default function LoginPage() {
   const onSubmitLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await login(data.email, data.password);
+      let response;
+      
+      // Détection automatique des superadmins basée sur l'email
+      const isSuperAdminEmail = data.email.includes('superadmin') || data.email === 'superadmin@gmail.com';
+      
+      if (isSuperAdminEmail) {
+        // Essayer la connexion superadmin
+        try {
+          response = await loginSuperAdmin(data.email, data.password);
+        } catch (superAdminError) {
+          // Si la connexion superadmin échoue, essayer la connexion normale
+          response = await login(data.email, data.password);
+        }
+      } else {
+        // Connexion normale
+        response = await login(data.email, data.password);
+      }
+      
       toast({
         title: 'Connexion réussie',
         description: 'Vous êtes maintenant connecté.',
       });
       
       // Rediriger vers la page appropriée selon le rôle de l'utilisateur
-      if (response.role === 'admin' || response.role === 'manager' || response.role === 'editor') {
+      if (response.role === 'superadmin') {
+        // Rediriger vers le dashboard super administrateur
+        setTimeout(() => {
+          router.push('/super-admin/dashboard');
+        }, 1000);
+      } else if (response.role === 'admin' || response.role === 'manager' || response.role === 'editor') {
         // Rediriger vers le dashboard administrateur
         setTimeout(() => {
           router.push('/admin/dashboard');
@@ -127,6 +149,9 @@ export default function LoginPage() {
                   {isLoading ? 'Connexion en cours...' : 'Se connecter'}
                 </Button>
                 <div className="text-sm text-center text-gray-500">
+                  <Link href="/logins" className="text-blue-600 hover:text-blue-800 underline">
+                    Connexion Super Admin
+                  </Link>
                 </div>
               </CardFooter>
             </form>

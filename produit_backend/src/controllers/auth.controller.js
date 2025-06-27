@@ -103,7 +103,13 @@ exports.login = async (req, res, next) => {
     }
 
     // Chercher l'utilisateur
-    const user = await User.findOne({ where: whereClause });
+    let user = await User.findOne({ where: whereClause });
+
+    // Si aucun utilisateur n'est trouvé avec le tenantId spécifié, essayer sans tenantId
+    // (utile pour la connexion d'administrateurs sans spécifier de tenant)
+    if (!user && effectiveTenantId) {
+      user = await User.findOne({ where: { email } });
+    }
 
     if (!user) {
       return next(new ErrorResponse('Identifiants invalides', 401));
