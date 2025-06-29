@@ -6,6 +6,53 @@ const fs = require('fs');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction pour normaliser les images d'un produit
+ * Convertit différents formats d'images en array de strings d'URLs
+ */
+const normalizeProductImages = (product) => {
+  if (!product.images) {
+    return [];
+  }
+  
+  let images = product.images;
+  
+  // Si c'est une string JSON, la parser
+  if (typeof images === 'string') {
+    try {
+      images = JSON.parse(images);
+    } catch (error) {
+      console.error('Erreur lors du parsing des images JSON:', error);
+      return [];
+    }
+  }
+  
+  // Si ce n'est pas un array, retourner un array vide
+  if (!Array.isArray(images)) {
+    return [];
+  }
+  
+  // Normaliser chaque image
+  return images.map(image => {
+    // Si l'image est un objet avec une propriété url
+    if (typeof image === 'object' && image.url) {
+      return image.url;
+    }
+    // Si l'image est déjà une string (URL)
+    if (typeof image === 'string') {
+      return image;
+    }
+    // Si l'image est un objet avec plusieurs variantes, prendre la première disponible
+    if (typeof image === 'object' && !image.url) {
+      const variants = Object.values(image);
+      if (variants.length > 0 && typeof variants[0] === 'string') {
+        return variants[0];
+      }
+    }
+    return null;
+  }).filter(Boolean); // Enlever les valeurs null/undefined
+};
+
+/**
  * @desc    Créer un nouveau produit
  * @route   POST /api/tenant/products
  * @access  Admin, Manager
@@ -158,6 +205,13 @@ exports.getProducts = async (req, res, next) => {
     // Exécuter la requête
     const { count, rows } = await Product.findAndCountAll(options);
     
+    // Normaliser les images pour chaque produit
+    const normalizedProducts = rows.map(product => {
+      const productData = product.toJSON();
+      productData.images = normalizeProductImages(productData);
+      return productData;
+    });
+    
     // Calculer la pagination
     const totalPages = Math.ceil(count / limit);
     
@@ -170,7 +224,7 @@ exports.getProducts = async (req, res, next) => {
         currentPage: parseInt(page),
         itemsPerPage: parseInt(limit)
       },
-      data: rows
+      data: normalizedProducts
     });
   } catch (error) {
     next(new ErrorResponse(`Erreur lors de la récupération des produits: ${error.message}`, 500));
@@ -201,9 +255,13 @@ exports.getProduct = async (req, res, next) => {
       return next(new ErrorResponse(`Produit non trouvé avec l'ID ${req.params.id}`, 404));
     }
     
+    // Normaliser les images du produit
+    const productData = product.toJSON();
+    productData.images = normalizeProductImages(productData);
+    
     res.status(200).json({
       success: true,
-      data: product
+      data: productData
     });
   } catch (error) {
     next(new ErrorResponse(`Erreur lors de la récupération du produit: ${error.message}`, 500));

@@ -90,6 +90,8 @@ export default function ProductsPage() {
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const itemsPerPage = 20;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   // Fonction pour charger les produits
   const loadData = async (page = currentPage) => {
@@ -155,6 +157,20 @@ export default function ProductsPage() {
       setLoadedCount(productsResponse.data.length);
       setCurrentPage(currentPg);
       setTotalPages(totalPgs);
+
+      // DEBUG: Log the structure of the first product
+      if (productsResponse.data && productsResponse.data.length > 0) {
+        console.log('=== DEBUG: Structure du premier produit ===');
+        console.log('Product data:', JSON.stringify(productsResponse.data[0], null, 2));
+        console.log('Product images:', productsResponse.data[0].images);
+        console.log('Product images type:', typeof productsResponse.data[0].images);
+        console.log('Product images Array.isArray:', Array.isArray(productsResponse.data[0].images));
+        if (Array.isArray(productsResponse.data[0].images)) {
+          console.log('First image:', productsResponse.data[0].images[0]);
+          console.log('First image type:', typeof productsResponse.data[0].images[0]);
+        }
+        console.log('=== END DEBUG ===');
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       setError('Impossible de charger les produits. Veuillez réessayer plus tard.');
@@ -436,12 +452,28 @@ export default function ProductsPage() {
                     <TableCell>
                       <div className="relative h-16 w-16 rounded-md overflow-hidden">
                         <img 
-                          src={product.images && Array.isArray(product.images) && product.images.length > 0 
-                            ? product.images[0] 
-                            : 'https://placehold.co/100x100?text=No+Image'} 
+                          src={(() => {
+                            // Debug: log les images pour ce produit
+                            console.log(`Images pour ${product.name}:`, product.images);
+                            
+                            if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                              let imageUrl = product.images[0];
+                              
+                              // Si l'URL est relative, construire l'URL complète vers le backend
+                              if (imageUrl && !imageUrl.startsWith('http')) {
+                                imageUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${imageUrl}`;
+                              }
+                              
+                              console.log(`URL finale pour ${product.name}:`, imageUrl);
+                              return imageUrl;
+                            }
+                            
+                            return 'https://placehold.co/100x100?text=No+Image';
+                          })()} 
                           alt={product.name}
                           className="object-cover h-full w-full"
                           onError={(e) => {
+                            console.log(`Erreur de chargement d'image pour ${product.name}`);
                             (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Error';
                           }}
                         />

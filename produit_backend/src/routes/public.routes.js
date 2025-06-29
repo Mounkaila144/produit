@@ -4,6 +4,67 @@ const { Tenant, User, Product, Category } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction pour normaliser les images d'un produit
+ * Convertit différents formats d'images en array de strings d'URLs
+ */
+const normalizeProductImages = (product) => {
+  if (!product.images) {
+    return [];
+  }
+  
+  let images = product.images;
+  
+  // Si c'est une string JSON, la parser
+  if (typeof images === 'string') {
+    try {
+      images = JSON.parse(images);
+    } catch (error) {
+      console.error('Erreur lors du parsing des images JSON:', error);
+      return [];
+    }
+  }
+  
+  // Si ce n'est pas un array, retourner un array vide
+  if (!Array.isArray(images)) {
+    return [];
+  }
+  
+  // Normaliser chaque image
+  return images.map(image => {
+    // Si l'image est un objet avec une propriété url
+    if (typeof image === 'object' && image.url) {
+      return image.url;
+    }
+    // Si l'image est déjà une string (URL)
+    if (typeof image === 'string') {
+      return image;
+    }
+    // Si l'image est un objet avec plusieurs variantes, prendre la première disponible
+    if (typeof image === 'object' && !image.url) {
+      const variants = Object.values(image);
+      if (variants.length > 0 && typeof variants[0] === 'string') {
+        return variants[0];
+      }
+    }
+    return null;
+  }).filter(Boolean); // Enlever les valeurs null/undefined
+};
+
+/**
+ * @desc    Route de santé pour vérifier que l'API fonctionne
+ * @route   GET /api/public/health
+ * @access  Public
+ */
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Backend en fonctionnement',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+/**
  * @desc    Récupérer les tenants actifs et non expirés par domaine
  * @route   GET /api/public/tenants/by-domain/:domain
  * @access  Public
@@ -191,13 +252,20 @@ router.get('/products/tenant/:tenantId', async (req, res) => {
       distinct: true
     });
     
+    // Normaliser les images pour chaque produit
+    const normalizedProducts = products.rows.map(product => {
+      const productData = product.toJSON();
+      productData.images = normalizeProductImages(productData);
+      return productData;
+    });
+    
     // Calculer la pagination
     const totalPages = Math.ceil(products.count / limit);
     
     res.status(200).json({
       success: true,
       count: products.count,
-      data: products.rows,
+      data: normalizedProducts,
       pagination: {
         totalItems: products.count,
         totalPages,

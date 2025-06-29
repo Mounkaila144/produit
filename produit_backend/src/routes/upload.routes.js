@@ -11,4 +11,7 @@ router.post('/single', authMiddleware.protect, extractTenant, upload.single('fil
 // Route pour upload plusieurs fichiers (max 5)
 router.post('/multiple', authMiddleware.protect, extractTenant, upload.array('files', 5), uploadController.uploadMultipleFiles);
 
+// Route alternative sans fichier obligatoire (l'ancienne route utilisée par le frontend)
+router.post('/', authMiddleware.protect, extractTenant, upload.single('file'), uploadController.uploadSingleFile);
+
 module.exports = router; 
