@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import { buildImageUrl } from '@/lib/utils';
 
 interface ProductPageProps {
   params: {
@@ -97,11 +98,14 @@ export default function ProductPage({ params }: ProductPageProps) {
         <div className="rounded-lg overflow-hidden bg-gray-100">
           {product.image ? (
             <Image 
-              src={product.image} 
+              src={buildImageUrl(product.image, tenant?.id)} 
               alt={product.name} 
               width={600}
               height={600}
               className="w-full h-auto object-cover"
+              onError={() => {
+                console.log(`❌ Erreur image produit ${product.name}:`, product.image);
+              }}
             />
           ) : (
             <div className="w-full h-[400px] flex items-center justify-center bg-gray-200">

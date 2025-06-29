@@ -31,7 +31,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, buildImageUrl } from '@/lib/utils';
 import productService, { Product } from '@/services/products';
 import categoryService, { Category } from '@/services/categories';
 
@@ -116,7 +116,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </Badge>
           )}
           <Badge
-            variant={product.isActive ? 'success' : 'destructive'}
+            variant={product.isActive ? 'default' : 'destructive'}
           >
             {product.isActive ? (
               <><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Actif</>
@@ -229,10 +229,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                           <Card>
                             <CardContent className="flex items-center justify-center p-6 h-[300px]">
                               <img
-                                src={image}
+                                src={buildImageUrl(image, product.tenantId)}
                                 alt={`${product.name} - Image ${index + 1}`}
                                 className="max-h-full max-w-full object-contain"
                                 onError={(e) => {
+                                  console.log(`❌ Erreur image produit ${product.name}:`, image);
                                   (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Image+non+disponible';
                                 }}
                               />

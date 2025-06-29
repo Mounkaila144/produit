@@ -59,8 +59,6 @@ export function buildImageUrl(imagePath: string, tenantId?: string): string {
   const baseUrl = process.env.NODE_ENV === 'production' 
     ? 'https://nigerdev.com' 
     : 'http://localhost:3001';
-    
-  console.log(`🔗 buildImageUrl - Environnement: ${process.env.NODE_ENV}, BaseURL: ${baseUrl}, ImagePath: ${imagePath}, TenantId: ${tenantId}`);
   
   let finalUrl = '';
   
@@ -77,6 +75,5 @@ export function buildImageUrl(imagePath: string, tenantId?: string): string {
     finalUrl = `${baseUrl}/uploads/${imagePath}`;
   }
   
-  console.log(`🔗 buildImageUrl - URL finale construite: ${finalUrl}`);
   return finalUrl;
 }

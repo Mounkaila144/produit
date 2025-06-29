@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users, ShoppingCart, CreditCard, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { buildImageUrl } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { tenant } = useTenant();
@@ -135,9 +136,13 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   {product.images && Array.isArray(product.images) && product.images.length > 0 && (
                     <img
-                      src={product.images[0]}
+                      src={buildImageUrl(product.images[0], tenant?.id)}
                       alt={product.name}
                       className="w-12 h-12 object-cover rounded"
+                      onError={(e) => {
+                        console.log(`❌ Erreur image dashboard ${product.name}:`, product.images[0]);
+                        (e.target as HTMLImageElement).src = 'https://placehold.co/48x48?text=No+Image';
+                      }}
                     />
                   )}
                   <div>

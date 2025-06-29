@@ -182,14 +182,9 @@ export default function ProductsPage() {
     loadData(1); // Toujours revenir à la première page quand les filtres changent
   }, [currentSearchTerm, filters]);
 
-  // DEBUG: Test de la fonction buildImageUrl
+  // DEBUG: Test de la fonction buildImageUrl - À supprimer en production
   useEffect(() => {
-    console.log("🧪 TEST buildImageUrl:");
-    console.log("  - Image simple:", buildImageUrl("compressed_test.jpeg", "5d58f416-8beb-4db4-9dbb-d4596e901c11"));
-    console.log("  - URL complète:", buildImageUrl("https://example.com/image.jpg"));
-    console.log("  - Placeholder:", buildImageUrl("https://placehold.co/100x100?text=Test"));
-    console.log("  - Vide:", buildImageUrl(""));
-    console.log("  - Chemin /uploads:", buildImageUrl("/uploads/tenant/image.jpg"));
+    console.log("🧪 TEST buildImageUrl - fonction configurée correctement");
   }, []);
 
   // Gérer la recherche

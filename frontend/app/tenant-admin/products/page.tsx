@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/image-upload';
 import { Badge } from '@/components/ui/badge';
+import { buildImageUrl } from '@/lib/utils';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),

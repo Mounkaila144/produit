@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import dashboardService, { DashboardStats, RecentActivity, TopProduct } from '@/services/dashboard';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, buildImageUrl } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -231,7 +231,15 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center space-x-4">
                       <div className="rounded-md overflow-hidden w-12 h-12 bg-muted flex items-center justify-center shadow-sm">
                         {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                          <img 
+                            src={buildImageUrl(product.images[0], product.tenantId)} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.log(`❌ Erreur image dashboard admin ${product.name}:`, product.images[0]);
+                              (e.target as HTMLImageElement).src = 'https://placehold.co/48x48?text=No+Image';
+                            }}
+                          />
                         ) : (
                           <Package className="h-6 w-6 text-gray-600" />
                         )}
