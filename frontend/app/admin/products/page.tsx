@@ -146,19 +146,8 @@ export default function ProductsPage() {
       setProducts(productsResponse.data);
       setCategories(categoriesResponse.data);
       
-      // DEBUG: Analyser les images des produits après traitement
-      console.log("🖼️ DEBUGGING IMAGES - Analyse des produits après parsing:");
-      productsResponse.data.forEach((product, index) => {
-        const hasValidImages = Array.isArray(product.images) && product.images.length > 0;
-        console.log(`📦 ${product.name}:`, {
-          id: product.id,
-          images: product.images,
-          isArray: Array.isArray(product.images),
-          count: hasValidImages ? product.images.length : 0,
-          firstImage: hasValidImages ? product.images[0] : 'aucune',
-          status: hasValidImages ? '✅ Images OK' : '❌ Pas d\'images'
-        });
-      });
+      // DEBUG: Vérification rapide des images (à supprimer en production)
+      console.log(`🖼️ ${productsResponse.data.length} produits chargés avec parsing des images`);
       
       // Récupérer les valeurs de pagination depuis le format de réponse du backend
       const total = productsResponse.total || (productsResponse.pagination?.totalItems || 0);
@@ -182,10 +171,7 @@ export default function ProductsPage() {
     loadData(1); // Toujours revenir à la première page quand les filtres changent
   }, [currentSearchTerm, filters]);
 
-  // DEBUG: Test de la fonction buildImageUrl - À supprimer en production
-  useEffect(() => {
-    console.log("🧪 TEST buildImageUrl - fonction configurée correctement");
-  }, []);
+  // Fonction buildImageUrl configurée pour traiter les images
 
   // Gérer la recherche
   const handleSearch = () => {
@@ -456,18 +442,8 @@ export default function ProductsPage() {
                   const rawImagePath = hasImages ? product.images[0] : '';
                   const imageUrl = buildImageUrl(rawImagePath, user?.tenantId || product.tenantId);
                   
-                  console.log(`🎨 RENDU IMAGE pour ${product.name}:`, {
-                    productId: product.id,
-                    tenantId: user?.tenantId || product.tenantId,
-                    rawImages: product.images,
-                    rawImagePath,
-                    hasImages,
-                    imageUrl,
-                    finalSrc: imageUrl,
-                    isAbsoluteUrl: imageUrl.startsWith('http'),
-                    isPlaceholder: imageUrl.includes('placehold.co'),
-                    windowLocation: typeof window !== 'undefined' ? window.location.href : 'SSR'
-                  });
+                  // DEBUG simplifié
+                  console.log(`🎨 ${product.name}: ${imageUrl}`);
                   
                   return (
                     <TableRow key={product.id}>

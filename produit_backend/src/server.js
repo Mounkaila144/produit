@@ -222,10 +222,34 @@ app.get('/api/direct/products/tenant/:tenantId', async (req, res) => {
     // Calculer les informations de pagination
     const totalPages = Math.ceil(count / limit);
     
+    // Parser les images JSON pour chaque produit (comme dans product.controller.js)
+    const processedProducts = products.map(product => {
+      const productData = product.toJSON();
+      
+      // Parser les images si c'est une chaîne JSON
+      if (typeof productData.images === 'string') {
+        try {
+          productData.images = JSON.parse(productData.images);
+          console.log(`✅ Images parsées pour ${productData.name} (route directe):`, productData.images);
+        } catch (e) {
+          console.error(`❌ Erreur parsing images pour ${productData.name} (route directe):`, productData.images, e);
+          productData.images = [];
+        }
+      }
+      
+      // S'assurer que c'est toujours un tableau
+      if (!Array.isArray(productData.images)) {
+        console.warn(`⚠️ Images non-array pour ${productData.name} (route directe), conversion en tableau:`, productData.images);
+        productData.images = productData.images ? [productData.images] : [];
+      }
+      
+      return productData;
+    });
+    
     res.status(200).json({
       success: true,
       count,
-      data: products,
+      data: processedProducts,
       pagination: {
         totalItems: count,
         totalPages,

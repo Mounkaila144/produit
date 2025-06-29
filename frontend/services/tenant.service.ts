@@ -113,25 +113,28 @@ export const TenantService = {
       // Retourner les produits avec la structure attendue par l'application
       return {
         products: products.map((product: any) => {
-          // Extraire l'URL de l'image du produit
-          let imageUrl = 'https://picsum.photos/seed/product/400/400'; // Image par défaut
-          
-          // Tenter d'extraire une image des formats possibles
+          // Traiter les images JSON comme dans productService
+          let processedImages = [];
           if (product.images) {
-            if (Array.isArray(product.images) && product.images.length > 0) {
-              // Format directement en tableau
-              imageUrl = product.images[0];
-            } else if (typeof product.images === 'string') {
+            if (typeof product.images === 'string') {
               try {
-                // Format JSON stringifié
-                const parsedImages = JSON.parse(product.images);
-                if (Array.isArray(parsedImages) && parsedImages.length > 0 && parsedImages[0].url) {
-                  imageUrl = parsedImages[0].url;
-                }
+                processedImages = JSON.parse(product.images);
+                console.log(`✅ Images parsées pour ${product.name} (TenantService):`, processedImages);
               } catch (e) {
-                // Silencieux en production
+                console.error(`❌ Erreur parsing images pour ${product.name} (TenantService):`, product.images, e);
+                processedImages = [];
               }
+            } else if (Array.isArray(product.images)) {
+              processedImages = product.images;
             }
+          }
+          
+          // Extraire l'URL de l'image du produit
+          let imageUrl = '';
+          if (Array.isArray(processedImages) && processedImages.length > 0) {
+            imageUrl = processedImages[0];
+          } else {
+            imageUrl = ''; // Sera géré par buildImageUrl dans ProductCard
           }
           
           return {

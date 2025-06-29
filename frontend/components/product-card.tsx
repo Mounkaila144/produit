@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTenantPath } from "@/hooks/useTenantPath";
 import { useState, useEffect } from 'react';
 import { TenantService, Tenant } from '@/services/tenant.service';
+import { buildImageUrl } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -63,7 +64,9 @@ export function ProductCard({ product }: ProductCardProps) {
     : `/products/${product.id}`;
 
   // Déterminer l'URL de l'image de façon sécurisée
-  const imageUrl = product.image || "https://placehold.co/600x600?text=Pas+d%27image";
+  const imageUrl = product.image 
+    ? buildImageUrl(product.image, tenantInfo?.id)
+    : "https://placehold.co/600x600?text=Pas+d%27image";
 
   return (
     <Card className="overflow-hidden rounded-xl border-none shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300">
@@ -76,6 +79,9 @@ export function ProductCard({ product }: ProductCardProps) {
               fill
               className="object-cover w-full h-full"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              onError={() => {
+                console.log(`❌ Erreur image ProductCard ${product.name}:`, product.image);
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
           </div>
