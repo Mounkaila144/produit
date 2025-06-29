@@ -44,7 +44,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import productService, { Product } from '@/services/products';
 import categoryService, { Category } from '@/services/categories';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, buildImageUrl } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
 // Interface pour les données de pagination
@@ -90,8 +90,6 @@ export default function ProductsPage() {
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const itemsPerPage = 20;
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   // Fonction pour charger les produits
   const loadData = async (page = currentPage) => {
@@ -148,6 +146,26 @@ export default function ProductsPage() {
       setProducts(productsResponse.data);
       setCategories(categoriesResponse.data);
       
+      // DEBUG: Analyser les images des produits
+      console.log("🖼️ DEBUGGING IMAGES - Analyse des produits reçus:");
+      productsResponse.data.forEach((product, index) => {
+        console.log(`📦 Produit ${index + 1}: ${product.name}`);
+        console.log(`  - ID: ${product.id}`);
+        console.log(`  - Images (brut):`, product.images);
+        console.log(`  - Type de images:`, typeof product.images);
+        console.log(`  - Est un array:`, Array.isArray(product.images));
+        console.log(`  - Longueur:`, Array.isArray(product.images) ? product.images.length : 'N/A');
+        
+        if (Array.isArray(product.images) && product.images.length > 0) {
+          console.log(`  - Première image:`, product.images[0]);
+          console.log(`  - Type première image:`, typeof product.images[0]);
+          console.log(`  - URL construite:`, product.images[0]);
+        } else {
+          console.log(`  - ❌ Aucune image valide trouvée pour ${product.name}`);
+        }
+        console.log('---');
+      });
+      
       // Récupérer les valeurs de pagination depuis le format de réponse du backend
       const total = productsResponse.total || (productsResponse.pagination?.totalItems || 0);
       const currentPg = productsResponse.page || (productsResponse.pagination?.currentPage || page);
@@ -157,20 +175,6 @@ export default function ProductsPage() {
       setLoadedCount(productsResponse.data.length);
       setCurrentPage(currentPg);
       setTotalPages(totalPgs);
-
-      // DEBUG: Log the structure of the first product
-      if (productsResponse.data && productsResponse.data.length > 0) {
-        console.log('=== DEBUG: Structure du premier produit ===');
-        console.log('Product data:', JSON.stringify(productsResponse.data[0], null, 2));
-        console.log('Product images:', productsResponse.data[0].images);
-        console.log('Product images type:', typeof productsResponse.data[0].images);
-        console.log('Product images Array.isArray:', Array.isArray(productsResponse.data[0].images));
-        if (Array.isArray(productsResponse.data[0].images)) {
-          console.log('First image:', productsResponse.data[0].images[0]);
-          console.log('First image type:', typeof productsResponse.data[0].images[0]);
-        }
-        console.log('=== END DEBUG ===');
-      }
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       setError('Impossible de charger les produits. Veuillez réessayer plus tard.');
@@ -183,6 +187,16 @@ export default function ProductsPage() {
   useEffect(() => {
     loadData(1); // Toujours revenir à la première page quand les filtres changent
   }, [currentSearchTerm, filters]);
+
+  // DEBUG: Test de la fonction buildImageUrl
+  useEffect(() => {
+    console.log("🧪 TEST buildImageUrl:");
+    console.log("  - Image simple:", buildImageUrl("compressed_test.jpeg", "5d58f416-8beb-4db4-9dbb-d4596e901c11"));
+    console.log("  - URL complète:", buildImageUrl("https://example.com/image.jpg"));
+    console.log("  - Placeholder:", buildImageUrl("https://placehold.co/100x100?text=Test"));
+    console.log("  - Vide:", buildImageUrl(""));
+    console.log("  - Chemin /uploads:", buildImageUrl("/uploads/tenant/image.jpg"));
+  }, []);
 
   // Gérer la recherche
   const handleSearch = () => {
@@ -447,38 +461,49 @@ export default function ProductsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                        <img 
-                          src={(() => {
-                            // Debug: log les images pour ce produit
-                            console.log(`Images pour ${product.name}:`, product.images);
-                            
-                            if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-                              let imageUrl = product.images[0];
-                              
-                              // Si l'URL est relative, construire l'URL complète vers le backend
-                              if (imageUrl && !imageUrl.startsWith('http')) {
-                                imageUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${imageUrl}`;
-                              }
-                              
-                              console.log(`URL finale pour ${product.name}:`, imageUrl);
-                              return imageUrl;
-                            }
-                            
-                            return 'https://placehold.co/100x100?text=No+Image';
-                          })()} 
-                          alt={product.name}
-                          className="object-cover h-full w-full"
-                          onError={(e) => {
-                            console.log(`Erreur de chargement d'image pour ${product.name}`);
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Error';
-                          }}
-                        />
-                      </div>
-                    </TableCell>
+                products.map((product) => {
+                  // DEBUG: Log au moment du rendu de l'image
+                  const hasImages = product.images && Array.isArray(product.images) && product.images.length > 0;
+                  const rawImagePath = hasImages ? product.images[0] : '';
+                  const imageUrl = buildImageUrl(rawImagePath, user?.tenantId || product.tenantId);
+                  
+                  console.log(`🎨 RENDU IMAGE pour ${product.name}:`, {
+                    productId: product.id,
+                    tenantId: user?.tenantId || product.tenantId,
+                    rawImages: product.images,
+                    rawImagePath,
+                    hasImages,
+                    imageUrl,
+                    finalSrc: imageUrl,
+                    isAbsoluteUrl: imageUrl.startsWith('http'),
+                    isPlaceholder: imageUrl.includes('placehold.co'),
+                    windowLocation: typeof window !== 'undefined' ? window.location.href : 'SSR'
+                  });
+                  
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <div className="relative h-16 w-16 rounded-md overflow-hidden">
+                          <img 
+                            src={imageUrl} 
+                            alt={product.name}
+                            className="object-cover h-full w-full"
+                            onLoad={() => {
+                              console.log(`✅ Image chargée avec succès pour ${product.name}:`, imageUrl);
+                            }}
+                            onError={(e) => {
+                              console.log(`❌ Erreur de chargement d'image pour ${product.name}:`, {
+                                originalSrc: imageUrl,
+                                productImages: product.images,
+                                tenantId: user?.tenantId || product.tenantId,
+                                error: e,
+                                timestamp: new Date().toISOString()
+                              });
+                              (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Error';
+                            }}
+                          />
+                        </div>
+                      </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{formatCurrency(product.price)}</TableCell>
                     <TableCell>{getCategoryName(product.categoryId)}</TableCell>
@@ -558,11 +583,12 @@ export default function ProductsPage() {
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                                                  </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

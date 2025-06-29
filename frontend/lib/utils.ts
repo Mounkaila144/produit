@@ -39,3 +39,44 @@ export function slugify(text: string) {
     .replace(/--+/g, '-')
     .trim();
 }
+
+export function buildImageUrl(imagePath: string, tenantId?: string): string {
+  if (!imagePath) {
+    return 'https://placehold.co/100x100?text=No+Image';
+  }
+  
+  // Si c'est déjà une URL complète, la retourner telle quelle
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Si c'est un placeholder, le retourner tel quel
+  if (imagePath.includes('placehold.co')) {
+    return imagePath;
+  }
+  
+  // Construire l'URL complète
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://nigerdev.com' 
+    : 'http://localhost:3001';
+    
+  console.log(`🔗 buildImageUrl - Environnement: ${process.env.NODE_ENV}, BaseURL: ${baseUrl}, ImagePath: ${imagePath}, TenantId: ${tenantId}`);
+  
+  let finalUrl = '';
+  
+  // Si le chemin commence par /uploads, l'utiliser directement
+  if (imagePath.startsWith('/uploads')) {
+    finalUrl = `${baseUrl}${imagePath}`;
+  }
+  // Sinon, construire le chemin avec le tenantId
+  else if (tenantId) {
+    finalUrl = `${baseUrl}/uploads/${tenantId}/${imagePath}`;
+  }
+  // Fallback : essayer de deviner le chemin
+  else {
+    finalUrl = `${baseUrl}/uploads/${imagePath}`;
+  }
+  
+  console.log(`🔗 buildImageUrl - URL finale construite: ${finalUrl}`);
+  return finalUrl;
+}
