@@ -146,24 +146,18 @@ export default function ProductsPage() {
       setProducts(productsResponse.data);
       setCategories(categoriesResponse.data);
       
-      // DEBUG: Analyser les images des produits
-      console.log("🖼️ DEBUGGING IMAGES - Analyse des produits reçus:");
+      // DEBUG: Analyser les images des produits après traitement
+      console.log("🖼️ DEBUGGING IMAGES - Analyse des produits après parsing:");
       productsResponse.data.forEach((product, index) => {
-        console.log(`📦 Produit ${index + 1}: ${product.name}`);
-        console.log(`  - ID: ${product.id}`);
-        console.log(`  - Images (brut):`, product.images);
-        console.log(`  - Type de images:`, typeof product.images);
-        console.log(`  - Est un array:`, Array.isArray(product.images));
-        console.log(`  - Longueur:`, Array.isArray(product.images) ? product.images.length : 'N/A');
-        
-        if (Array.isArray(product.images) && product.images.length > 0) {
-          console.log(`  - Première image:`, product.images[0]);
-          console.log(`  - Type première image:`, typeof product.images[0]);
-          console.log(`  - URL construite:`, product.images[0]);
-        } else {
-          console.log(`  - ❌ Aucune image valide trouvée pour ${product.name}`);
-        }
-        console.log('---');
+        const hasValidImages = Array.isArray(product.images) && product.images.length > 0;
+        console.log(`📦 ${product.name}:`, {
+          id: product.id,
+          images: product.images,
+          isArray: Array.isArray(product.images),
+          count: hasValidImages ? product.images.length : 0,
+          firstImage: hasValidImages ? product.images[0] : 'aucune',
+          status: hasValidImages ? '✅ Images OK' : '❌ Pas d\'images'
+        });
       });
       
       // Récupérer les valeurs de pagination depuis le format de réponse du backend

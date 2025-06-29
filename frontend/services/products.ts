@@ -83,9 +83,29 @@ const productService = {
       const response = await apiService.get<any>('/products', { params });
       console.log("Service productService.getProducts - réponse brute:", response);
       
+      // Parser les images JSON pour chaque produit
+      const processedData = (response.data || []).map((product: any) => {
+        // Parser les images si c'est une chaîne JSON
+        if (typeof product.images === 'string') {
+          try {
+            product.images = JSON.parse(product.images);
+            console.log(`✅ Images parsées pour ${product.name}:`, product.images);
+          } catch (e) {
+            console.error(`❌ Erreur parsing images pour ${product.name}:`, product.images, e);
+            product.images = [];
+          }
+        }
+        // S'assurer que c'est toujours un tableau
+        if (!Array.isArray(product.images)) {
+          console.warn(`⚠️ Images non-array pour ${product.name}, conversion en tableau:`, product.images);
+          product.images = product.images ? [product.images] : [];
+        }
+        return product;
+      });
+      
       // Adapter la réponse au format attendu
       const formattedResponse: ProductsListResponse = {
-        data: response.data || [],
+        data: processedData,
         total: response.count || 0,
         page: params?.page || 1,
         limit: params?.limit || 10,
@@ -109,8 +129,33 @@ const productService = {
   },
 
   // Récupérer un produit par son ID
-  getProduct: (id: string): Promise<ProductResponse> =>
-    apiService.get<ProductResponse>(`/products/${id}`),
+  getProduct: async (id: string): Promise<ProductResponse> => {
+    try {
+      const response = await apiService.get<ProductResponse>(`/products/${id}`);
+      
+      // Parser les images si nécessaire
+      if (response.data && typeof response.data.images === 'string') {
+        try {
+          response.data.images = JSON.parse(response.data.images);
+          console.log(`✅ Images parsées pour produit ${response.data.name}:`, response.data.images);
+        } catch (e) {
+          console.error(`❌ Erreur parsing images pour produit ${response.data.name}:`, response.data.images, e);
+          response.data.images = [];
+        }
+      }
+      
+      // S'assurer que c'est toujours un tableau
+      if (response.data && !Array.isArray(response.data.images)) {
+        console.warn(`⚠️ Images non-array pour produit ${response.data.name}, conversion en tableau:`, response.data.images);
+        response.data.images = response.data.images ? [response.data.images] : [];
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("Service getProduct - erreur:", error);
+      throw error;
+    }
+  },
 
   // Créer un nouveau produit
   createProduct: (data: ProductCreateData): Promise<ProductResponse> => {
